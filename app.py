@@ -8,7 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-API_URL = "https://api-inference.huggingface.co/models/dima806/food-image-classification"
+API_URL = "https://api-inference.huggingface.co/models/nateraw/food"
 
 headers = {
     "Authorization": f"Bearer {os.getenv('HUGGINGFACE_TOKEN')}"
