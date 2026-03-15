@@ -2,32 +2,50 @@ from flask import Flask, request, jsonify
 import requests
 import os
 from dotenv import load_dotenv
+from foods_db import foods_db
 
 load_dotenv()
 
 app = Flask(__name__)
 
-API_URL = "https://router.huggingface.co/hf-inference/models/nateraw/food"
+API_URL = "https://router.huggingface.co/hf-inference/models/Salesforce/blip-image-captioning-base"
 
 headers = {
     "Authorization": "Bearer " + os.getenv("HUGGINGFACE_TOKEN"),
     "Content-Type": "application/octet-stream"
 }
 
-# temel kalori
-calories = {
-    "pizza": 285,
-    "burger": 354,
-    "pasta": 260,
-    "salad": 150,
-    "steak": 400
-}
-
-# porsiyon çarpanları
 portion_multiplier = {
     "small": 0.8,
     "medium": 1,
     "large": 1.4
+}
+
+# AI benzer yemek eşleştirme
+food_mapping = {
+
+    "beans": "kurufasulye",
+    "bean stew": "kurufasulye",
+    "white beans": "kurufasulye",
+
+    "lentil": "mercimek corbasi",
+    "lentil soup": "mercimek corbasi",
+
+    "dumpling": "manti",
+    "dumplings": "manti",
+
+    "gyro": "doner",
+    "shawarma": "doner",
+
+    "pastry": "borek",
+    "cake": "baklava",
+
+    "rice": "pilav",
+
+    "meatball": "kofte",
+
+    "chicken": "tavuk",
+    "grilled chicken": "tavuk izgara"
 }
 
 
@@ -49,6 +67,7 @@ def home():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
+
     image = request.files["image"].read()
     portion = request.form.get("portion", "medium")
 
@@ -62,28 +81,45 @@ def analyze():
 
     result = response.json()
 
-    if not result:
+    caption = ""
+
+    if isinstance(result, list) and "generated_text" in result[0]:
+        caption = result[0]["generated_text"].lower()
+
+    caption = caption.replace("_", " ").replace("-", " ")
+
+    print("AI caption:", caption)
+
+    food_key = "unknown"
+
+    # önce direkt foods_db içinde var mı bak
+    for food in foods_db.keys():
+        if food in caption:
+            food_key = food
+            break
+
+    # yoksa mapping kullan
+    if food_key == "unknown":
+        for key in food_mapping:
+            if key in caption:
+                food_key = food_mapping[key]
+                break
+
+    if food_key == "unknown":
         return jsonify({
             "food": "Bilinmeyen Yemek",
+            "portion": portion,
             "calorie": 200
         })
 
-    food_raw = result[0]["label"]
-    food_clean = food_raw.replace("_", " ").replace("-", " ").title()
-    food_key = food_raw.lower()
+    base_calorie = foods_db.get(food_key, 200)
 
-    base_calorie = calories.get(food_key, 200)
     multiplier = portion_multiplier.get(portion, 1)
+
     calorie = int(base_calorie * multiplier)
 
-    print("------ AI SONUCU ------")
-    print("Yemek:", food_clean)
-    print("Porsiyon:", portion)
-    print("Kalori:", calorie)
-    print("-----------------------")
-
     return jsonify({
-        "food": food_clean,
+        "food": food_key.title(),
         "portion": portion,
         "calorie": calorie
     })
@@ -115,6 +151,7 @@ def coach():
 
 @app.route("/weekly", methods=["POST"])
 def weekly_analysis():
+
     data = request.json
     weekly = data.get("weekly", [])
     goal = data.get("goal", 2000)
@@ -139,6 +176,7 @@ def weekly_analysis():
 
 @app.route("/mealplan", methods=["POST"])
 def meal_plan():
+
     data = request.json
     goal = data.get("goal", 2000)
 
