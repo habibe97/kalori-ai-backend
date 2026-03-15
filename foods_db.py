@@ -1,5 +1,4 @@
 foods_db = {
-
     # FAST FOOD
     "pizza": 285,
     "burger": 354,
@@ -77,7 +76,7 @@ foods_db = {
     # BALIK
     "somon": 208,
     "levrek": 124,
-    "çipura": 135,
+    "cipura": 135,
     "ton baligi": 184,
     "hamsi": 210,
     "sardalya": 208,
@@ -195,3 +194,36 @@ foods_db = {
     "biscuit": 502,
     "cracker": 420
 }
+
+# KATEGORİLER (YENİ!)
+food_categories = {
+    "corbalar": ["mercimek corbasi", "yayla corbasi", "ezogelin", "tarhana", "tavuk corbasi", "sebze corbasi", "domates corbasi", "mantar corbasi", "brokoli corbasi", "corba"],
+    "kebaplar": ["doner", "adana kebap", "urfa kebap", "iskender", "kebap", "et sote", "kofte", "kasap kofte", "izgara kofte", "etli nohut", "kurufasulye"],
+    "tatlilar": ["baklava", "kunefe", "revani", "sutlac", "kazandibi", "tavuk gogsu", "lokum", "helva", "irmik helvasi", "dondurma", "profiterol", "cheesecake", "brownie", "puding", "waffle", "pancake", "kek", "donut"],
+    "pilavlar": ["pilav", "bulgur pilavi", "sehriyeli pilav", "tavuk pilav", "etli pilav", "risotto", "kepekli pirinc"],
+    "hamurisi": ["borek", "su boregi", "kiymali borek", "peynirli borek", "pogaca", "simit", "acma", "gozleme", "katmer", "lahmacun", "pide"],
+    "fastfood": ["pizza", "burger", "hotdog", "fries", "sandwich", "toast", "pasta", "lasagna", "spaghetti", "ramen", "noodle", "sushi", "taco", "burrito", "chips", "nachos", "popcorn"],
+    "etler": ["steak", "antrikot", "bonfile", "pirzola", "tavuk", "tavuk izgara", "tavuk kanat", "tavuk but", "tavuk nugget", "kofte", "izgara kofte"],
+    "baliklar": ["somon", "levrek", "cipura", "ton baligi", "hamsi", "sardalya", "uskumru", "karides", "kalamar"],
+    "salatalar": ["salad", "coban salata", "akdeniz salata", "tavuk salata", "ton balikli salata", "sezar salata"],
+    "sebzeler": ["patates", "kizartma patates", "brokoli", "ispanak", "kabak", "patlican", "biber", "domates", "salatalik", "havuc", "bezelye", "mantar", "lahana", "marul"],
+    "kahvalti": ["yumurta", "omlet", "sahanda yumurta", "menemen", "peynir", "beyaz peynir", "kasar peynir", "zeytin", "bal", "kaymak", "recel", "granola", "muesli"],
+    "meyveler": ["apple", "banana", "orange", "strawberry", "watermelon", "melon", "grape", "pear", "peach", "kiwi", "mango", "pineapple", "cherry", "plum", "apricot", "pomegranate", "fig"],
+    "icecekler": ["ayran", "milk", "coffee", "tea", "cola", "fanta", "juice", "smoothie", "milkshake"],
+    "turk_yemekleri": ["manti", "icli kofte", "sarma", "dolma", "karniyarik", "imam bayildi", "musakka", "guvec", "tavuk sote", "menemen"]
+}
+
+# KATEGORİ ORTALAMALARI (YENİ!)
+category_averages = {}
+
+for category, foods in food_categories.items():
+    total = 0
+    count = 0
+    for food in foods:
+        if food in foods_db:
+            total += foods_db[food]
+            count += 1
+    if count > 0:
+        category_averages[category] = total // count
+    else:
+        category_averages[category] = 200  # Varsayılan
