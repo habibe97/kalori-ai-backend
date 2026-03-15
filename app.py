@@ -8,7 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-API_URL = "https://router.huggingface.co/hf-inference/models/Salesforce/blip-image-captioning-base"
+API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base"
 
 headers = {
     "Authorization": "Bearer " + os.getenv("HUGGINGFACE_TOKEN"),
