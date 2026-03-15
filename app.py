@@ -8,7 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base"
+API_URL = "https://api-inference.huggingface.co/models/nateraw/food"
 
 headers = {
     "Authorization": f"Bearer {os.getenv('HUGGINGFACE_TOKEN')}"
@@ -18,22 +18,6 @@ portion_multiplier = {
     "small": 0.8,
     "medium": 1,
     "large": 1.4
-}
-
-food_mapping = {
-    "beans": "kurufasulye",
-    "bean": "kurufasulye",
-    "lentil": "mercimek corbasi",
-    "dumpling": "manti",
-    "dumplings": "manti",
-    "gyro": "doner",
-    "shawarma": "doner",
-    "pastry": "borek",
-    "cake": "baklava",
-    "rice": "pilav",
-    "meatball": "kofte",
-    "chicken": "tavuk",
-    "grilled chicken": "tavuk izgara"
 }
 
 
@@ -46,88 +30,49 @@ def home():
 def analyze():
 
     if "image" not in request.files:
-        return jsonify({"error": "image gönderilmedi"})
+        return jsonify({"error": "image yok"})
 
     image = request.files["image"].read()
     portion = request.form.get("portion", "medium")
 
     try:
-
         response = requests.post(
-            API_URL,
-            headers=headers,
-            data=image,
-            timeout=30
-        )
+            API_URL, headers=headers, data=image, timeout=30)
 
         if response.status_code != 200:
-            print("HF ERROR:", response.text)
             return jsonify({
-                "food": "AI çalışmadı",
+                "food": "AI hata",
                 "portion": portion,
                 "calorie": 200
             })
 
-        try:
-            result = response.json()
-        except:
-            print("JSON PARSE ERROR:", response.text)
-            return jsonify({
-                "food": "AI cevap hatası",
-                "portion": portion,
-                "calorie": 200
-            })
-
-        caption = ""
-
-        if isinstance(result, list) and "generated_text" in result[0]:
-            caption = result[0]["generated_text"].lower()
-
-        caption = caption.replace("_", " ").replace("-", " ")
-
-        print("AI caption:", caption)
-
-        food_key = "unknown"
-
-        # foods_db kontrol
-        for food in foods_db.keys():
-            if food in caption:
-                food_key = food
-                break
-
-        # mapping kontrol
-        if food_key == "unknown":
-            for key in food_mapping:
-                if key in caption:
-                    food_key = food_mapping[key]
-                    break
-
-        if food_key == "unknown":
-            return jsonify({
-                "food": "Bilinmeyen Yemek",
-                "portion": portion,
-                "calorie": 200
-            })
-
-        base_calorie = foods_db.get(food_key, 200)
-        multiplier = portion_multiplier.get(portion, 1)
-
-        calorie = int(base_calorie * multiplier)
-
-        return jsonify({
-            "food": food_key.title(),
-            "portion": portion,
-            "calorie": calorie
-        })
+        result = response.json()
 
     except Exception as e:
-        print("SERVER ERROR:", e)
-
+        print(e)
         return jsonify({
             "food": "Sunucu hatası",
             "portion": portion,
             "calorie": 200
         })
+
+    food_key = "unknown"
+
+    if isinstance(result, list) and "label" in result[0]:
+        food_key = result[0]["label"].lower()
+        food_key = food_key.replace("_", " ").replace("-", " ")
+
+    base_calorie = foods_db.get(food_key, 200)
+
+    multiplier = portion_multiplier.get(portion, 1)
+
+    calorie = int(base_calorie * multiplier)
+
+    return jsonify({
+        "food": food_key.title(),
+        "portion": portion,
+        "calorie": calorie
+    })
 
 
 @app.route("/coach", methods=["POST"])
@@ -142,7 +87,7 @@ def coach():
     if remaining > 1000:
         advice = "Bugün kalori alımın düşük görünüyor."
     elif remaining > 500:
-        advice = "Günlük hedefe yaklaşıyorsun."
+        advice = "Hedefe yaklaşıyorsun."
     elif remaining > 0:
         advice = "Hedefe çok yakınsın."
     else:
@@ -185,7 +130,7 @@ def meal_plan():
     goal = request.json.get("goal", 2000)
 
     return jsonify({
-        "breakfast": ["Yulaf", "Omlet", "Yoğurt"],
+        "breakfast": ["Yulaf + süt", "Omlet", "Yoğurt + meyve"],
         "lunch": ["Tavuk pilav", "Ton balıklı salata"],
         "dinner": ["Sebze yemeği", "Izgara tavuk"],
         "goal": goal
